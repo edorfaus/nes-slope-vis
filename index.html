@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>NES slope visualization</title>
+	<link rel="stylesheet" href="styles.css">
+	<script src="instructions.js" defer></script>
+	<script src="parser.js" defer></script>
+	<script src="core.js" defer></script>
+	<script src="script.js" defer></script>
+</head>
+<body>
+	<div id="left">
+		<div>Program:
+			<button id="run" accesskey="r"><u>R</u>un</button>
+			Top-right position:
+			<input id="pos-x" type="number" value="168"
+				min="0" max="223" step="1" required/>,
+			<input id="pos-y" type="number" value="120"
+				min="0" max="207" step="1" required/>
+		</div>
+		<textarea id="program" autofocus autocapitalize="none"
+			spellcheck="false" translate="no" enterkeyhint="enter"
+>; Input in PlayerX/PlayerY; TmpX etc. can be used freely.
+lda PlayerX
+and #$0F
+sta TmpX
+
+lda PlayerY
+and #$0F
+sta TmpY
+
+; To switch between the right and left slopes;
+; flip horizontally by reversing the X coordinate.
+lda #$0F
+sec
+sbc TmpX
+;sta TmpX ; This line enables/disables the flip.
+
+; To get the top slopes, swap these two coordinates (lda TmpX;cmp TmpY).
+lda TmpY
+cmp TmpX
+branch @collided
+; For emulator hit detection, the label can't be right after the branch.
+rts
+@collided:
+; Collision was detected; move the player out to the edge of the wall.
+
+; Only one of the following calls should be enabled at a time.
+;jsr MoveVertical	; Only move up/down to get to the edge.
+;jsr MoveHorizontal	; Only move left/right to get to the edge.
+;jsr MoveNearest 	; Move in both directions to get to the edge.
+
+rts
+
+MoveVertical:
+	; Set the Y coordinate to X. This always works, even when flipped.
+	lda PlayerY
+	and #$F0
+	ora TmpX
+	sta PlayerY
+	rts
+
+MoveHorizontal:
+	; Check if we are currently flipped horizontally.
+	lda PlayerX
+	and #$0F
+	cmp TmpX
+	beq :+
+		; We are flipped, so flip the move as well.
+		lda #$0F
+		sec
+		sbc TmpY
+		sta TmpY
+	:
+	; Not flipped, or flip already handled above. Set the X coordinate.
+	lda PlayerX
+	and #$F0
+	ora TmpY
+	sta PlayerX
+	rts
+
+MoveNearest:
+	; This averages the local X and Y coordinates, to get the diagonal.
+	clc
+	lda TmpX
+	adc TmpY
+	lsr a
+	sta TmpY
+
+	; Set the Y coordinate to X; this always works, even when flipped.
+	lda PlayerY
+	and #$F0
+	ora TmpY
+	sta PlayerY
+
+	; Check if we are currently flipped horizontally.
+	lda PlayerX
+	and #$0F
+	cmp TmpX
+	beq :+
+		; We are flipped, so flip the move as well.
+		lda #$0F
+		sec
+		sbc TmpY
+		sta TmpY
+	:
+
+	; Not flipped, or flip already handled above. Set the X coordinate.
+	lda PlayerX
+	and #$F0
+	ora TmpY
+	sta PlayerX
+
+	rts
+</textarea>
+	</div>
+	<div class="branch">
+		<div class="title"><span class="set">BCS</span>/<span class="clear">BCC</span></div>
+		<canvas id="carry" height="256" width="256"/>
+	</div>
+	<div class="branch">
+		<div class="title"><span class="set">BEQ</span>/<span class="clear">BNE</span></div>
+		<canvas id="zero" height="225" width="225"/>
+	</div>
+	<div class="branch">
+		<div class="title"><span class="set">BMI</span>/<span class="clear">BPL</span></div>
+		<canvas id="sign" height="225" width="225"/>
+	</div>
+	<div class="branch">
+		<div class="title"><span class="set">BVS</span>/<span class="clear">BVC</span></div>
+		<canvas id="overflow" height="225" width="225"/>
+	</div>
+</body>
+</html>

@@ -41,7 +41,7 @@ function drawBG(canvas) {
 	const ctx = canvas.getContext('2d');
 	ctx.imageSmoothingEnabled = false;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.fillStyle = "#C0C0C0";
+	ctx.fillStyle = "#404040";
 	ctx.fillRect(0, 0, width, height);
 }
 
@@ -140,9 +140,9 @@ function runGrid(canvId, bs, bc, program) {
 			if (!sDone || !cDone) {
 				color = '#800000';
 			} else if (!sHit || !cHit) {
-				color = '#C0A0A0';
+				color = '#400000';
 			} else if (sCollide === cCollide) {
-				color = '#E000E0';
+				color = '#800080';
 			} else if (sCollide) {
 				color = '#00E000';
 			} else {

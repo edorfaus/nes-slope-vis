@@ -1,5 +1,22 @@
 'use strict';
 
+function indexed(varname, index) {
+	const r = /^([^+-]+)([+-][0-9]+)?$/.exec(varname);
+	if (r === null) {
+		throw new Error('invalid varname in load indexed: '+varname);
+	}
+	if (r[2] !== undefined) {
+		index += parseInt(r[2], 10);
+	}
+	if (index === 0) {
+		return r[1];
+	}
+	if (index <= 0) {
+		return r[1] + index;
+	}
+	return r[1] + '+' + index;
+}
+
 // Addressing modes
 const Implicit = { name: 'implicit' };
 const Acc = {
@@ -10,15 +27,23 @@ const Acc = {
 const Imm = { name: 'immediate', load: (c, i) => i[4] };
 const ZP = {
 	name: 'ZP',
-	load: (c, i) => c.Vars.has(i[4]) ? c.Vars.get(i[4]) : 0,
+	load: (c, i) => c.load(i[4]),
 	store: (c, i, v) => c.Vars.set(i[4], v),
 };
-const ZPX = { name: 'ZP,X' };
-const ZPY = { name: 'ZP,Y' };
+const ZPX = {
+	name: 'ZP,X',
+	load: (c, i) => c.load(indexed(i[4], c.RegX)),
+	store: (c, i, v) => c.Vars.set(indexed(i[4], c.RegX), v),
+};
+const ZPY = {
+	name: 'ZP,Y',
+	load: (c, i) => c.load(indexed(i[4], c.RegY)),
+	store: (c, i, v) => c.Vars.set(indexed(i[4], c.RegY), v),
+};
 const Rel = { name: 'relative' };
 const Abs = { name: 'absolute', load: ZP.load, store: ZP.store };
-const AbsX = { name: 'absolute,X' };
-const AbsY = { name: 'absolute,Y' };
+const AbsX = { name: 'absolute,X', load: ZPX.load, store: ZPX.store };
+const AbsY = { name: 'absolute,Y', load: ZPY.load, store: ZPY.store };
 const Indir = { name: 'indirect' };
 const IndirX = { name: 'indirect,X' };
 const IndirY = { name: 'indirect,Y' };

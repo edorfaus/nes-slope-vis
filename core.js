@@ -63,6 +63,9 @@ class Core {
 		this.FZero = (v & 0x02) !== 0;
 		this.FCarry = v & 0x01;
 	}
+	load(n) {
+		return this.Vars.has(n) ? this.Vars.get(n) : 0;
+	}
 	compare(a, m) {
 		this.FCarry = (a >= m ? 1 : 0);
 		this.setZN(a - m);

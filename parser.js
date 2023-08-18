@@ -221,10 +221,11 @@ class Parser {
 			if (ind !== 'x' && ind !== 'y') {
 				throw this._error(li, 'invalid indexed addressing mode');
 			}
-			throw this._error(
-				li, 'indexed addressing modes are not (yet?) supported'
-			);
-			// ZPX, ZPY, AbsX, AbsY
+			const absMode = ind === 'x' ? AbsX : AbsY;
+			if (instructions[opcode].modes.includes(absMode)) {
+				return [absMode, parts[0]];
+			}
+			return [ind === 'x' ? ZPX : ZPY, parts[0]];
 		}
 
 		// ZP, Abs, Rel
@@ -260,11 +261,15 @@ class Parser {
 				// Relative - this is used for branches; resolve label.
 				p[4] = this._findLabelRef(pi, p[4]);
 			}
-			if (am === Abs || am === ZP) {
+			if (
+				am === Abs || am === ZP
+				|| am === AbsX || am === ZPX
+				|| am === AbsY || am === ZPY
+			) {
 				// Variable address; verify and handle +0, +1 etc.
 				p[4] = this._parseVarExpr(p[0], p[4]);
 			}
-			// ZPX, ZPY, AbsX, AbsY, Indir, IndirX, IndirY
+			// Indir, IndirX, IndirY
 		}
 	}
 
